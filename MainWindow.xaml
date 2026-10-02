@@ -1,0 +1,1582 @@
+﻿<Window x:Class="MangaLibraryApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:po="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options"
+        xmlns:local="clr-namespace:MangaLibraryApp"
+        mc:Ignorable="d po"
+        Title="NekoDex"
+        Width="1380" Height="860" MinWidth="1040" MinHeight="660"
+        SizeChanged="Window_SizeChanged"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgBrush}"
+        Foreground="{DynamicResource TextBrush}"
+        FontFamily="Segoe UI" FontSize="13"
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing"
+        Closed="Window_Closed"
+        StateChanged="Window_StateChanged"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <!-- Eigene Titelleiste: die Systemleiste würde die Windows-Akzentfarbe annehmen (z. B. Rot) und das dunkle Design stören.
+         Die oberen 34 px sind Ziehbereich; Elemente mit IsHitTestVisibleInChrome bleiben klickbar. -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="HudTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+        <LinearGradientBrush x:Key="NekoMarkBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#00D2FF" Offset="0"/>
+            <GradientStop Color="#5B8CFF" Offset="0.55"/>
+            <GradientStop Color="#7C5CFF" Offset="1"/>
+        </LinearGradientBrush>
+
+        <ControlTemplate x:Key="NekoMarkTemplate" TargetType="ContentControl">
+            <Viewbox Stretch="Uniform">
+                <Canvas Width="32" Height="32">
+                    <Path Fill="{StaticResource NekoMarkBrush}"
+                          Data="M6,14.2 L10.1,2.4 L15.2,14.2 Z M16.8,14.2 L21.9,2.4 L26,14.2 Z"/>
+                    <Path Fill="#1200D2FF" Stroke="{StaticResource NekoMarkBrush}" StrokeThickness="1.35"
+                          Data="M3.6,15.4 H28.4 V24.6 Q16,31 3.6,24.6 Z"/>
+                    <Path Stroke="#00D2FF" StrokeThickness="0.7" Opacity="0.55"
+                          Data="M7.5,18.2 H24.5 M7.5,21.2 H24.5 M11.2,16.6 V24.2 M16,16.6 V24.2 M20.8,16.6 V24.2"/>
+                    <Path Stroke="#F4FEFF" StrokeThickness="1.7" StrokeLineJoin="Round"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Data="M10.4,24.4 V17.2 L21.6,24.4 V17.2"/>
+                    <Path Stroke="#00D2FF" StrokeThickness="1.15" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Data="M3.2,12.6 V15.4 H6.2 M25.8,15.4 H28.8 V12.6 M3.2,27.2 V24.6 H6.2 M25.8,24.6 H28.8 V27.2"/>
+                </Canvas>
+            </Viewbox>
+        </ControlTemplate>
+
+        <Style x:Key="CompactSiteRadio" TargetType="RadioButton" BasedOn="{StaticResource SiteRadio}">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" CornerRadius="12" Padding="10,3" BorderThickness="1"
+                                Background="{StaticResource CardBrush}" BorderBrush="{StaticResource LineBrush}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentLineBrush}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentFaintBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TagToggle" TargetType="ToggleButton">
+            <Setter Property="Foreground" Value="{StaticResource ChipTextBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Padding" Value="10,3"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" CornerRadius="12" Padding="{TemplateBinding Padding}" BorderThickness="1"
+                                Background="{StaticResource AccentFaintBrush}" BorderBrush="{StaticResource AccentBrush}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentLineBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <ContextMenu x:Key="TileMenu" Style="{StaticResource HudContextMenu}">
+            <ContextMenu.Resources>
+                <Style TargetType="MenuItem" BasedOn="{StaticResource HudMenuItem}"/>
+                <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator"
+                       BasedOn="{StaticResource HudMenuSeparator}"/>
+            </ContextMenu.Resources>
+            <MenuItem Header="Lesen" Click="MenuRead_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE736;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{StaticResource AccentBrush}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Online lesen" Click="MenuReadOnline_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE774;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{StaticResource AccentBrush}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="Mit Standardprogramm öffnen" Click="MenuOpen_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE768;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{StaticResource MutedBrush}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Im Explorer anzeigen" Click="MenuShowInExplorer_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE838;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{StaticResource MutedBrush}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Quelle im Browser öffnen" Click="MenuOpenSource_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE71B;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{StaticResource MutedBrush}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Titel &amp; Tags bearbeiten …" Click="MenuEdit_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE70F;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{StaticResource MutedBrush}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Favorit umschalten" Click="MenuFavorite_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE734;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{StaticResource WarnBrush}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="Aus Bibliothek entfernen" Click="MenuRemove_Click">
+                <MenuItem.Icon>
+                    <TextBlock Text="&#xE74D;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{StaticResource DangerBrush}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             KACHEL-RASTER
+             ═══════════════════════════════════════════════════════════════ -->
+        <Style x:Key="TileItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="7"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="ContextMenu" Value="{StaticResource TileMenu}"/>
+            <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
+            <EventSetter Event="MouseDoubleClick" Handler="Tile_DoubleClick"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Frame" Background="Transparent" BorderBrush="Transparent" BorderThickness="2"
+                                CornerRadius="13" RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Panel.ZIndex" Value="5"/>
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                <Setter TargetName="Frame" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="#22D3EE" BlurRadius="26" ShadowDepth="0" Opacity="0.45"/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Frame"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             To="1.035" Duration="0:0:0.12"/>
+                                            <DoubleAnimation Storyboard.TargetName="Frame"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             To="1.035" Duration="0:0:0.12"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Frame"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                             To="1" Duration="0:0:0.12"/>
+                                            <DoubleAnimation Storyboard.TargetName="Frame"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                             To="1" Duration="0:0:0.12"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TileGridStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="21,8,12,26"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource TileItemStyle}"/>
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <ScrollViewer Focusable="False" Padding="{TemplateBinding Padding}"
+                                      HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                      VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                                      CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}">
+                            <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="MangaTileTemplate">
+            <Grid Width="176" Height="262" Background="Transparent" ToolTip="{Binding ToolTipText}">
+                <!-- Platzhalter, solange (oder falls) kein Cover vorhanden ist -->
+                <Border CornerRadius="11" Background="{StaticResource CardBrush}">
+                    <TextBlock Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" FontSize="42"
+                               Foreground="{StaticResource DimBrush}" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" Margin="0,0,0,40"/>
+                </Border>
+
+                <!-- Cover (abgerundet über ImageBrush) -->
+                <Border CornerRadius="11">
+                    <Border.Background>
+                        <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill"/>
+                    </Border.Background>
+                </Border>
+
+                <!-- Titel-Overlay -->
+                <Border VerticalAlignment="Bottom" CornerRadius="0,0,11,11" Padding="12,34,12,11">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#00070A10" Offset="0"/>
+                            <GradientStop Color="#E0070A10" Offset="0.5"/>
+                            <GradientStop Color="#F5070A10" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel>
+                        <TextBlock Text="{Binding Title}" Foreground="White" FontWeight="SemiBold" FontSize="13.5"
+                                   TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="38" LineHeight="18"
+                                   LineStackingStrategy="BlockLineHeight"/>
+                        <TextBlock Text="{Binding Meta}" Foreground="{StaticResource MutedBrush}" FontSize="11.5"
+                                   Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- "NEU"-Badge -->
+                <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="9" Padding="8,3" CornerRadius="7"
+                        Background="{StaticResource AccentGradient}"
+                        Visibility="{Binding IsNew, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="NEU" Foreground="#04121A" FontSize="10" FontWeight="Bold"
+                               FontFamily="{StaticResource MonoFont}"/>
+                </Border>
+
+                <!-- Favorit -->
+                <ToggleButton Style="{StaticResource StarToggle}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                              Margin="8" IsChecked="{Binding IsFavorite, Mode=TwoWay}"/>
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="WebTileItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource TileItemStyle}">
+            <Setter Property="ContextMenu" Value="{x:Null}"/>
+            <EventSetter Event="MouseLeftButtonUp" Handler="WebSearchTile_Click"/>
+        </Style>
+
+        <DataTemplate x:Key="WebSearchTileTemplate">
+            <Grid Width="176" Height="300" Background="Transparent" ToolTip="{Binding ToolTipText}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Border CornerRadius="11,11,0,0" Background="{StaticResource CardBrush}">
+                        <TextBlock Text="&#xE774;" FontFamily="{StaticResource IconFont}" FontSize="42"
+                                   Foreground="{StaticResource DimBrush}" HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+                    <Border CornerRadius="11,11,0,0">
+                        <Border.Background>
+                            <ImageBrush ImageSource="{Binding Cover}" Stretch="UniformToFill"/>
+                        </Border.Background>
+                    </Border>
+                    <Border VerticalAlignment="Bottom" CornerRadius="0" Padding="12,28,12,8">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#00070A10" Offset="0"/>
+                                <GradientStop Color="#E0070A10" Offset="0.55"/>
+                                <GradientStop Color="#F5070A10" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}" Foreground="White" FontWeight="SemiBold" FontSize="13"
+                                       TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="36" LineHeight="17"
+                                       LineStackingStrategy="BlockLineHeight"/>
+                            <TextBlock Text="{Binding Meta}" Foreground="{StaticResource MutedBrush}" FontSize="11"
+                                       Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                <Grid Grid.Row="1" Margin="6,6,6,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Content="Direkt Lesen" Style="{StaticResource HudButton}" Height="28" FontSize="11"
+                            Padding="4,0" Click="WebSearchRead_Click" ToolTip="Reader im Online-Streaming-Modus öffnen"/>
+                    <Button Grid.Column="1" Content="Downloaden" Style="{StaticResource AccentButton}" Height="28"
+                            FontSize="11" Padding="4,0" Margin="6,0,0,0" Click="WebSearchDownload_Click"
+                            ToolTip="gallery-dl im Hintergrund starten, danach Import in die Bibliothek"/>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="WebActiveTagTemplate">
+            <Button Style="{StaticResource BareButton}" Margin="0,0,6,6" Click="WebActiveTag_Click"
+                    AutomationProperties.Name="{Binding Tag}" ToolTip="Klicken, um den Tag zu entfernen">
+                <Border CornerRadius="14" Padding="12,5,9,5" BorderThickness="1"
+                        Background="{StaticResource ChipBrush}" BorderBrush="{StaticResource AccentBrush}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Tag}" FontSize="12.5" VerticalAlignment="Center"
+                                   Foreground="{StaticResource ChipTextBrush}"/>
+                        <TextBlock Text="&#xE711;" FontFamily="{StaticResource IconFont}" FontSize="9" Margin="10,1,0,0"
+                                   Foreground="{StaticResource ChipCountBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Button>
+        </DataTemplate>
+
+        <DataTemplate x:Key="WebCatalogTagTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis"
+                           Foreground="{StaticResource ChipTextBrush}" ToolTip="{Binding Name}"/>
+                <TextBlock Grid.Column="1" Text="{Binding MangaCount}" Margin="12,0,0,0" FontSize="11"
+                           FontFamily="{StaticResource MonoFont}" Foreground="{StaticResource ChipCountBrush}"/>
+            </Grid>
+        </DataTemplate>
+
+        <!-- TAG-CHIPS (Sidebar) -->
+        <DataTemplate x:Key="TagChipTemplate">
+            <Button Style="{StaticResource BareButton}" Margin="0,0,6,6" AutomationProperties.Name="{Binding Name}"
+                    Click="TagChip_Click" MouseRightButtonUp="TagChip_RightClick"
+                    ToolTip="Linksklick: Tag einschließen · Rechtsklick: Tag ausschließen">
+                <Border CornerRadius="11" Padding="10,4" BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{StaticResource ChipBrush}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource ChipBorderBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{StaticResource AccentLineBrush}"/>
+                                    <Setter Property="Background" Value="{StaticResource ChipHoverBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsIncluded}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsExcluded}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource DangerSoftBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{StaticResource DangerLineBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Name}" FontSize="12" Foreground="{StaticResource ChipTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource ChipTextBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsExcluded}" Value="True">
+                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                            <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Count}" Margin="7,0,0,0" FontSize="11" Foreground="{StaticResource ChipCountBrush}"
+                                   FontFamily="{StaticResource MonoFont}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Button>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TagCategoryTemplate">
+            <Expander Style="{StaticResource HudExpander}" IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                      AutomationProperties.Name="{Binding Header}">
+                <Expander.Header>
+                    <DockPanel LastChildFill="True">
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Margin="12,0,4,0"
+                                   FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                   Foreground="{StaticResource ChipCountBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="11.5"
+                                   Foreground="{StaticResource ChipTextBrush}" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Expander.Header>
+                <ItemsControl ItemsSource="{Binding Tags}" ItemTemplate="{StaticResource TagChipTemplate}"
+                              Margin="0,4,0,2">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </Expander>
+        </DataTemplate>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             DOWNLOAD-WARTESCHLANGE
+             ═══════════════════════════════════════════════════════════════ -->
+        <Style x:Key="JobItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="10,2"/>
+            <Setter Property="Padding" Value="14,11,10,11"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="AutomationProperties.Name" Value="{Binding DisplayTitle}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="1"
+                                CornerRadius="10" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentFaintBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentLineBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="JobListStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource JobItemStyle}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <ScrollViewer Focusable="False" Padding="0,0,0,10"
+                                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="JobTemplate">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Ellipse Width="9" Height="9" Margin="0,0,13,0" VerticalAlignment="Center">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <Setter Property="Fill" Value="{StaticResource DimBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}" Value="Running">
+                                    <Setter Property="Fill" Value="{StaticResource AccentBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Completed">
+                                    <Setter Property="Fill" Value="{StaticResource SuccessBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Failed">
+                                    <Setter Property="Fill" Value="{StaticResource DangerBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                    <Setter Property="Fill" Value="{StaticResource WarnBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding DisplayTitle}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                        <!-- Quelle des Downloads (bei unbekannter Herkunft ausgeblendet) -->
+                        <Border Grid.Column="1" Margin="10,0,10,0" Padding="7,1,7,2" CornerRadius="6" VerticalAlignment="Center"
+                                Background="{StaticResource AccentFaintBrush}" BorderBrush="{StaticResource AccentLineBrush}"
+                                BorderThickness="1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Source}" Value="other">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding SourceName}" FontSize="10.5" Foreground="{StaticResource AccentBrush}"/>
+                        </Border>
+                    </Grid>
+                    <TextBlock Text="{Binding StatusText}" Margin="0,2,0,0" FontSize="11.5"
+                               Foreground="{StaticResource MutedBrush}" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource IconButton}" Content="&#xE711;" ToolTip="Abbrechen"
+                            Click="CancelJob_Click"
+                            Visibility="{Binding CanCancel, Converter={StaticResource BoolToVis}}"/>
+                    <Button Style="{StaticResource IconButton}" Content="&#xE74D;" ToolTip="Aus der Liste entfernen"
+                            Click="RemoveJob_Click"
+                            Visibility="{Binding CanRemove, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+
+                <Control Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Height="3" Margin="0,9,6,0"
+                         Template="{StaticResource ScanBarTemplate}"
+                         Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}"/>
+            </Grid>
+        </DataTemplate>
+
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             GEWÄHLTE TAGS · QUELLEN-LEISTE · VORSCHLÄGE
+             ═══════════════════════════════════════════════════════════════ -->
+        <DataTemplate x:Key="ActiveTagTemplate">
+            <Button Style="{StaticResource BareButton}" Margin="0,0,6,6" Click="ActiveTag_Click"
+                    AutomationProperties.Name="{Binding Tag}" ToolTip="Klicken, um den Tag zu entfernen">
+                <Border CornerRadius="14" Padding="12,5,9,5" BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{StaticResource ChipBrush}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Exclude}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource DangerSoftBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{StaticResource DangerLineBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                                    <Setter Property="BorderBrush" Value="{StaticResource ChipTextBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Tag}" FontSize="12.5" VerticalAlignment="Center"
+                                   Foreground="{StaticResource ChipTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource ChipTextBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Exclude}" Value="True">
+                                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                            <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="&#xE711;" FontFamily="{StaticResource IconFont}" FontSize="9" Margin="10,1,0,0"
+                                   Foreground="{StaticResource ChipCountBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Button>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SourceCheckTemplate">
+            <CheckBox Style="{StaticResource SourceCheckBox}" Margin="0,0,8,6"
+                      IsChecked="{Binding IsSelected, Mode=TwoWay}" AutomationProperties.Name="{Binding Name}"
+                      MouseRightButtonUp="SourceCheck_RightClick"
+                      ToolTip="Klick: an-/abwählen · Rechtsklick: nur diese Quelle">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Name}" FontSize="12.5" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding CountText}" Margin="8,0,0,0" FontSize="11" VerticalAlignment="Center"
+                               FontFamily="{StaticResource MonoFont}" Foreground="{StaticResource DimBrush}"/>
+                </StackPanel>
+            </CheckBox>
+        </DataTemplate>
+
+        <Style x:Key="SuggestItemStyle" TargetType="ListBoxItem">
+            <Setter Property="AutomationProperties.Name" Value="{Binding Tag}"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Foreground" Value="{StaticResource ChipTextBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="{StaticResource ChipBrush}" CornerRadius="8"
+                                Padding="{TemplateBinding Padding}" BorderBrush="{StaticResource ChipBorderBrush}"
+                                BorderThickness="1" Margin="0,1">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource ChipHoverBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentLineBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="SuggestionTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Category}" FontFamily="{StaticResource MonoFont}" FontSize="11.5"
+                               Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Category}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Foreground="{StaticResource ChipTextBrush}"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1" Text="{Binding Count}" Margin="14,0,0,0" FontSize="11"
+                           FontFamily="{StaticResource MonoFont}" Foreground="{StaticResource ChipCountBrush}" VerticalAlignment="Center"/>
+            </Grid>
+        </DataTemplate>
+
+        <!-- Nach SuggestItemStyle: StaticResource darin würde sonst UnsetValue (NamedObject) liefern und den Start sprengen. -->
+        <Style x:Key="VirtualTagListStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="MinHeight" Value="120"/>
+            <Setter Property="MaxHeight" Value="220"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True"/>
+            <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling"/>
+            <Setter Property="VirtualizingPanel.ScrollUnit" Value="Item"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource SuggestItemStyle}"/>
+            <Setter Property="ItemTemplate" Value="{StaticResource WebCatalogTagTemplate}"/>
+            <Setter Property="Foreground" Value="{StaticResource ChipTextBrush}"/>
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling"/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="WebTagCategoryTemplate">
+            <Expander Style="{StaticResource HudExpander}" IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                      AutomationProperties.Name="{Binding Header}">
+                <Expander.Header>
+                    <DockPanel LastChildFill="True">
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Margin="12,0,4,0"
+                                   FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                   Foreground="{StaticResource ChipCountBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="11.5"
+                                   Foreground="{StaticResource ChipTextBrush}" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Expander.Header>
+                <ListBox Style="{StaticResource VirtualTagListStyle}" Margin="0,4,0,2" MinHeight="0" MaxHeight="480"
+                         ItemsSource="{Binding Tags}"
+                         ItemTemplate="{StaticResource WebCatalogTagTemplate}"
+                         AutomationProperties.Name="{Binding Title}"
+                         MouseLeftButtonUp="WebCatalogList_Click"/>
+            </Expander>
+        </DataTemplate>
+
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         LAYOUT
+         ═══════════════════════════════════════════════════════════════════ -->
+    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="248"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ───────────────────────── SIDEBAR ───────────────────────── -->
+        <Border Grid.Column="0" Background="{StaticResource PanelBrush}"
+                BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Logo -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="22,22,22,22">
+                    <Border Width="36" Height="36" CornerRadius="10" Background="#1200D2FF"
+                            BorderBrush="#6600D2FF" BorderThickness="1">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#00D2FF" BlurRadius="16" ShadowDepth="0" Opacity="0.45"/>
+                        </Border.Effect>
+                        <ContentControl Template="{StaticResource NekoMarkTemplate}" Margin="4"/>
+                    </Border>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="NekoDex" FontWeight="Bold" FontSize="15"/>
+                        <TextBlock Text="NekoDex // Web Discovery HUD" Style="{StaticResource Overline}"
+                                   Foreground="{StaticResource AccentBrush}" Margin="0,1,0,0"
+                                   TextWrapping="Wrap" MaxWidth="156"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Navigation -->
+                <StackPanel Grid.Row="1">
+                    <TextBlock Text="NAVIGATION" Style="{StaticResource Overline}" Margin="24,0,0,8"/>
+
+                    <RadioButton x:Name="NavLibrary" Style="{StaticResource NavButton}" GroupName="Nav"
+                                 AutomationProperties.Name="Bibliothek"
+                                 IsChecked="True" Tag="Library" Checked="Nav_Checked">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xE8F1;" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Grid.Column="1" Text="Bibliothek" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="NavLibraryCount" Grid.Column="2" Style="{StaticResource NavBadge}"/>
+                        </Grid>
+                    </RadioButton>
+
+                    <RadioButton x:Name="NavFavorites" Style="{StaticResource NavButton}" GroupName="Nav"
+                                 AutomationProperties.Name="Favoriten"
+                                 Tag="Favorites" Checked="Nav_Checked">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xE734;" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Grid.Column="1" Text="Favoriten" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="NavFavoritesCount" Grid.Column="2" Style="{StaticResource NavBadge}"/>
+                        </Grid>
+                    </RadioButton>
+
+                    <RadioButton x:Name="NavDownloads" Style="{StaticResource NavButton}" GroupName="Nav"
+                                 AutomationProperties.Name="Downloads"
+                                 Tag="Downloads" Checked="Nav_Checked">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xE896;" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Grid.Column="1" Text="Downloads" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="NavDownloadsCount" Grid.Column="2" Style="{StaticResource NavBadge}"
+                                       Foreground="{StaticResource AccentBrush}"/>
+                        </Grid>
+                    </RadioButton>
+
+                    <RadioButton x:Name="NavWebSearch" Style="{StaticResource NavButton}" GroupName="Nav"
+                                 AutomationProperties.Name="Web Search"
+                                 Tag="WebSearch" Checked="Nav_Checked">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xE774;" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Grid.Column="1" Text="Web Search" VerticalAlignment="Center"/>
+                        </Grid>
+                    </RadioButton>
+
+                    <RadioButton x:Name="NavSettings" Style="{StaticResource NavButton}" GroupName="Nav"
+                                 AutomationProperties.Name="Einstellungen"
+                                 Tag="Settings" Checked="Nav_Checked">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#xE713;" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Grid.Column="1" Text="Einstellungen" VerticalAlignment="Center"/>
+                        </Grid>
+                    </RadioButton>
+                </StackPanel>
+
+                <!-- Tags: Überschrift und Filter (bei vielen Tags zeigen die Chips nur die häufigsten) -->
+                <StackPanel Grid.Row="2" Margin="24,28,20,10">
+                    <Grid>
+                        <TextBlock Text="TAGS" Style="{StaticResource Overline}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TagCountText" Style="{StaticResource Overline}" HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                    <TextBox x:Name="TagFilterBox" Style="{StaticResource HudTextBox}" Margin="0,10,0,0" MinHeight="34"
+                             Height="34" FontSize="12.5" Padding="12,0" Tag="Tags filtern …"
+                             AutomationProperties.Name="Tags filtern" TextChanged="TagFilterBox_TextChanged"/>
+                </StackPanel>
+
+                <!-- Tags: Chips (Klick = filtern) -->
+                <ScrollViewer Grid.Row="3" Margin="18,0,6,0" Padding="0,0,10,0" Focusable="False"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid>
+                        <ItemsControl x:Name="TagList" ItemTemplate="{StaticResource TagCategoryTemplate}"
+                                      AutomationProperties.Name="Bibliotheks-Tags nach Kategorie">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <TextBlock x:Name="NoTagsText" Text="Noch keine Tags.&#x0A;Sie erscheinen nach dem ersten Download."
+                                   Foreground="{StaticResource ChipCountBrush}" FontSize="12" TextWrapping="Wrap" Margin="6,2,0,0"/>
+                    </Grid>
+                </ScrollViewer>
+
+                <!-- Statistik -->
+                <Border Grid.Row="4" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0" Padding="24,14">
+                    <TextBlock x:Name="FooterStats" Style="{StaticResource Overline}" TextTrimming="CharacterEllipsis"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ───────────────────────── HAUPTBEREICH ───────────────────────── -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Titelleiste: Akzentlinie · Pfad · Fenster-Buttons (Ziehbereich: die oberen 34 px des Fensters) -->
+            <Grid Grid.Row="0">
+                <Border Height="3" VerticalAlignment="Top" Background="{StaticResource TopLineBrush}"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,2,0,0" IsHitTestVisible="False">
+                    <ContentControl Template="{StaticResource NekoMarkTemplate}" Width="16" Height="16" Margin="0,0,8,0"/>
+                    <TextBlock Text="NekoDex" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextBrush}"/>
+                    <TextBlock x:Name="BreadcrumbText" Style="{StaticResource Overline}" Margin="8,0,0,0"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" ToolTip="Minimieren"
+                            Click="Minimize_Click"/>
+                    <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButton}" Content="&#xE922;"
+                            ToolTip="Maximieren" Click="MaximizeRestore_Click"/>
+                    <Button Style="{StaticResource CloseCaptionButton}" Content="&#xE8BB;" ToolTip="Schließen"
+                            Click="Close_Click"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Kopfzeile: Titel · Suchleiste · Sortierung; darunter die gewählten Tag-Chips -->
+            <Grid x:Name="PageHeader" Grid.Row="1" Margin="28,10,28,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" MinWidth="180"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="PageTitleText" Text="Bibliothek" FontSize="24" FontWeight="Bold"/>
+                    <TextBlock x:Name="PageSubtitleText" Foreground="{StaticResource MutedBrush}" FontSize="12.5"
+                               Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <Grid x:Name="LibrarySearchPanel" Grid.Column="1" Margin="28,0" MaxWidth="720">
+                    <TextBox x:Name="SearchBox" Style="{StaticResource HudTextBox}" Height="46" FontSize="14"
+                             Padding="46,0,44,0"
+                             Tag="Titel, Autor oder Tags …   z. B.  artist:name  parody:serie  -language:german"
+                             ToolTip="Wörter durchsuchen Titel, Autor und Tags.&#x0A;Mehrere Tags: artist:name parody:serie language:english – es müssen ALLE zutreffen.&#x0A;Mit „-“ davor wird ein Tag ausgeschlossen (-tag:horror).&#x0A;Beim Tippen erscheinen Vorschläge (↑↓ wählen, Tab/Enter übernehmen).&#x0A;Leerzeichen in Tags als _ schreiben (artist:foo_bar).&#x0A;Strg+F = Fokus · Esc = leeren · Rücktaste im leeren Feld = letzten Tag entfernen"
+                             AutomationProperties.Name="Suche"
+                             TextChanged="SearchBox_TextChanged" KeyDown="SearchBox_KeyDown"
+                             PreviewKeyDown="SearchBox_PreviewKeyDown" LostKeyboardFocus="SearchBox_LostKeyboardFocus"/>
+                    <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="16"
+                               Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Left"
+                               VerticalAlignment="Center" Margin="17,0,0,0" IsHitTestVisible="False"/>
+                    <Button x:Name="ClearSearchButton" Style="{StaticResource IconButton}" Content="&#xE711;"
+                            Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,8,0" Visibility="Collapsed"
+                            ToolTip="Suche und Tags leeren (Esc)" Click="ClearSearch_Click"/>
+
+                    <!-- Vorschlagsliste: Tags aus der Datenbank, die zum getippten Wort passen -->
+                    <Popup x:Name="SuggestPopup" PlacementTarget="{Binding ElementName=SearchBox}" Placement="Bottom"
+                           StaysOpen="True" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                        <Border Margin="0,6,12,16" Padding="5" CornerRadius="12" Background="{StaticResource PanelBrush}"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                                Width="{Binding ActualWidth, ElementName=SearchBox}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="5" Opacity="0.55"/>
+                            </Border.Effect>
+                            <ListBox x:Name="SuggestList" Background="Transparent" BorderThickness="0" Focusable="False"
+                                     Foreground="{StaticResource ChipTextBrush}"
+                                     ItemContainerStyle="{StaticResource SuggestItemStyle}"
+                                     ItemTemplate="{StaticResource SuggestionTemplate}"
+                                     AutomationProperties.Name="Tag-Vorschläge"
+                                     PreviewMouseLeftButtonUp="SuggestList_PreviewMouseLeftButtonUp"/>
+                        </Border>
+                    </Popup>
+                </Grid>
+
+                <StackPanel x:Name="SortPanel" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ComboBox x:Name="SortBox" Style="{StaticResource HudComboBox}" Width="200" SelectedIndex="0"
+                              AutomationProperties.Name="Sortierung"
+                              SelectionChanged="SortBox_SelectionChanged">
+                        <ComboBoxItem Content="Zuletzt hinzugefügt" Tag="DateAddedDesc"/>
+                        <ComboBoxItem Content="Titel A–Z" Tag="TitleAsc"/>
+                        <ComboBoxItem Content="Titel Z–A" Tag="TitleDesc"/>
+                        <ComboBoxItem Content="Meiste Seiten" Tag="PagesDesc"/>
+                        <ComboBoxItem Content="Zuletzt geöffnet" Tag="LastOpenedDesc"/>
+                    </ComboBox>
+                    <Button Style="{StaticResource IconButton}" Content="&#xE72C;" Margin="8,0,0,0" Width="40" Height="40"
+                            ToolTip="Bibliothek neu laden" Click="Refresh_Click"/>
+                </StackPanel>
+
+                <!-- Gewählte Tags: ein Klick entfernt den Tag wieder. Es werden nur Werke gezeigt, die ALLE diese Tags tragen. -->
+                <Border x:Name="ActiveTagBar" Grid.Row="1" Grid.Column="1" Margin="28,12,28,0" MaxWidth="720"
+                        HorizontalAlignment="Stretch" Visibility="Collapsed"
+                        ToolTip="Es werden nur Werke angezeigt, die alle diese Tags tragen (UND).&#x0A;Klick auf einen Tag entfernt ihn.">
+                    <ItemsControl x:Name="ActiveTagList" ItemTemplate="{StaticResource ActiveTagTemplate}"
+                                  AutomationProperties.Name="Gewählte Tags">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </Border>
+            </Grid>
+
+            <!-- Quellen-Leiste: gilt für die Suche (ODER) und begrenzt, von welchen Seiten gallery-dl laden darf -->
+            <Border x:Name="SourceBarPanel" Grid.Row="2" Margin="28,0,28,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="QUELLEN" Style="{StaticResource Overline}" VerticalAlignment="Center" Margin="0,0,16,6"/>
+                    <ItemsControl x:Name="SourceBar" Grid.Column="1" ItemTemplate="{StaticResource SourceCheckTemplate}"
+                                  AutomationProperties.Name="Quellen">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                        <TextBlock x:Name="SourceHintText" Text="FILTER AKTIV" Style="{StaticResource Overline}"
+                                   Foreground="{StaticResource WarnBrush}" VerticalAlignment="Center" Margin="0,0,12,6"
+                                   Visibility="Collapsed"
+                                   ToolTip="Suche und Downloads sind auf die angehakten Quellen beschränkt."/>
+                        <Button Content="Alle" Style="{StaticResource HudButton}" Height="30" Padding="14,0"
+                                ToolTip="Alle Quellen anhaken (Rechtsklick auf eine Quelle: nur diese)" Click="SourceAll_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Seiten -->
+            <Grid Grid.Row="3">
+
+                <!-- Bibliothek / Favoriten -->
+                <Grid x:Name="PageLibrary">
+                    <ListBox x:Name="TileGrid" Style="{StaticResource TileGridStyle}"
+                             ItemTemplate="{StaticResource MangaTileTemplate}"
+                             AutomationProperties.Name="Bibliothek"
+                             KeyDown="TileGrid_KeyDown"
+                             ScrollViewer.ScrollChanged="TileGrid_ScrollChanged"/>
+
+                    <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Margin="0,0,0,40" Visibility="Collapsed">
+                        <Border Width="84" Height="84" CornerRadius="42" Background="{StaticResource AccentFaintBrush}"
+                                BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1" HorizontalAlignment="Center">
+                            <TextBlock x:Name="EmptyIcon" Text="&#xE8F1;" FontFamily="{StaticResource IconFont}" FontSize="34"
+                                       Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="EmptyTitleText" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,0"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="EmptyHintText" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0"
+                                   HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="420"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,22,0,0">
+                            <Button x:Name="EmptyActionButton" Content="Download hinzufügen" Style="{StaticResource AccentButton}"
+                                    Click="GoDownloads_Click"/>
+                            <Button x:Name="EmptyScanButton" Content="Ordner einlesen" Style="{StaticResource HudButton}"
+                                    Margin="10,0,0,0" ToolTip="Vorhandene Ordner und CBZ-Archive im Bibliotheksordner aufnehmen"
+                                    Click="ScanLibrary_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Web Discovery: eine Website, Tags dieser Quelle, gallery-dl-Suche, direkt lesen -->
+                <Grid x:Name="WebSearchView" Margin="16,0,16,8" Visibility="Collapsed" Background="{StaticResource BgBrush}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*" MinHeight="0"/>
+                    </Grid.RowDefinitions>
+
+                    <Border x:Name="WebSearchHeader" Padding="10,6" Margin="0,0,0,4" CornerRadius="12"
+                            Background="{StaticResource CardBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                        <StackPanel>
+                            <DockPanel LastChildFill="True">
+                                <ToggleButton x:Name="WebTagsToggle" DockPanel.Dock="Right" Style="{StaticResource TagToggle}"
+                                              IsChecked="True" Margin="8,0,0,0" VerticalAlignment="Center"
+                                              Content="🏷️  Tags ausblenden"
+                                              Checked="WebTagsToggle_Changed" Unchecked="WebTagsToggle_Changed"
+                                              ToolTip="Blendet Tag-Chips und den Tag-Katalog ein oder aus."
+                                              AutomationProperties.Name="Tags anzeigen oder ausblenden"/>
+                                <TextBlock Text="ZIEL-WEBSITE" Style="{StaticResource Overline}" FontSize="10"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <WrapPanel VerticalAlignment="Center">
+                                    <RadioButton Style="{StaticResource CompactSiteRadio}" GroupName="WebSite" Tag="nhentai"
+                                                 Content="nhentai" IsChecked="True" Checked="WebSite_Checked"/>
+                                    <RadioButton Style="{StaticResource CompactSiteRadio}" GroupName="WebSite" Tag="hitomi"
+                                                 Content="Hitomi.la" Checked="WebSite_Checked"/>
+                                    <RadioButton Style="{StaticResource CompactSiteRadio}" GroupName="WebSite" Tag="ehentai"
+                                                 Content="E-Hentai" Checked="WebSite_Checked"/>
+                                </WrapPanel>
+                            </DockPanel>
+
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid>
+                                    <TextBox x:Name="WebSearchTagBox" Style="{StaticResource HudTextBox}" Height="32"
+                                             FontSize="12.5" Padding="10,0,10,0"
+                                             Tag="Tags oder Suchwort …  z. B.  language:english  artist:name"
+                                             AutomationProperties.Name="Online-Tags"
+                                             TextChanged="WebSearchTagBox_TextChanged"
+                                             PreviewKeyDown="WebSearchTagBox_PreviewKeyDown"
+                                             KeyDown="WebSearchTagBox_KeyDown"
+                                             LostKeyboardFocus="WebSearchTagBox_LostKeyboardFocus"/>
+                                    <Popup x:Name="WebSuggestPopup" PlacementTarget="{Binding ElementName=WebSearchTagBox}"
+                                           Placement="Bottom" StaysOpen="True" AllowsTransparency="True" Focusable="False"
+                                           PopupAnimation="Fade">
+                                        <Border Margin="0,4,8,8" Padding="4" CornerRadius="10"
+                                                Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource LineBrush}"
+                                                BorderThickness="1"
+                                                Width="{Binding ActualWidth, ElementName=WebSearchTagBox}">
+                                            <Border.Effect>
+                                                <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="4" Opacity="0.5"/>
+                                            </Border.Effect>
+                                            <ListBox x:Name="WebSuggestList" Background="Transparent" BorderThickness="0"
+                                                     MaxHeight="180"
+                                                     Foreground="{StaticResource ChipTextBrush}"
+                                                     ScrollViewer.CanContentScroll="True"
+                                                     VirtualizingPanel.IsVirtualizing="True"
+                                                     VirtualizingPanel.VirtualizationMode="Recycling"
+                                                     VirtualizingPanel.ScrollUnit="Pixel"
+                                                     Focusable="False" ItemContainerStyle="{StaticResource SuggestItemStyle}"
+                                                     ItemTemplate="{StaticResource SuggestionTemplate}"
+                                                     AutomationProperties.Name="Online-Tag-Vorschläge"
+                                                     PreviewMouseLeftButtonUp="WebSuggestList_PreviewMouseLeftButtonUp">
+                                                <ListBox.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling"/>
+                                                    </ItemsPanelTemplate>
+                                                </ListBox.ItemsPanel>
+                                            </ListBox>
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                                <Button Grid.Column="1" x:Name="WebSearchButton" Content="Online suchen"
+                                        Style="{StaticResource AccentButton}" Margin="8,0,0,0" Height="32" Padding="12,0"
+                                        Click="WebSearch_Click"
+                                        ToolTip="Sucht auf nhentai, Hitomi.la und E-Hentai. Hitomi und E-Hentai fallen bei HTTP 403 auf gallery-dl -j zurück."/>
+                                <Button Grid.Column="2" x:Name="WebSearchCancelButton" Content="Abbrechen"
+                                        Style="{StaticResource HudButton}" Margin="6,0,0,0" Height="32" Padding="10,0"
+                                        Visibility="Collapsed" Click="WebSearchCancel_Click"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <ScrollViewer x:Name="WebCatalogScroll" Grid.Row="1" Margin="0,6,0,0" Focusable="False"
+                                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="WebTagArea">
+                            <ItemsControl x:Name="WebActiveTagList"
+                                          ItemTemplate="{StaticResource WebActiveTagTemplate}"
+                                          AutomationProperties.Name="Gewählte Online-Tags">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+
+                            <Expander x:Name="WebCatalogExpander" Style="{StaticResource HudExpander}" Margin="0,4,0,0"
+                                      IsExpanded="True"
+                                      Expanded="WebCatalogExpander_Changed"
+                                      Collapsed="WebCatalogExpander_Changed"
+                                      AutomationProperties.Name="Tag-Katalog ein- oder ausklappen">
+                                <Expander.Header>
+                                    <TextBlock x:Name="WebCatalogExpanderText" Text="🏷️  Tag-Katalog einklappen"
+                                               Foreground="{StaticResource ChipTextBrush}" FontWeight="SemiBold" FontSize="12"/>
+                                </Expander.Header>
+                                <StackPanel Margin="0,2,0,0">
+                                    <DockPanel LastChildFill="False">
+                                        <Button x:Name="WebTagDownloadButton" DockPanel.Dock="Left"
+                                                Content="Tags dieser Quelle aktualisieren"
+                                                Style="{StaticResource HudButton}" Height="28" Padding="10,0" FontSize="12"
+                                                Click="WebTagDownload_Click"
+                                                ToolTip="Lädt den Tag-Index dieser Website in online_site_tags"/>
+                                        <Button DockPanel.Dock="Left" Content="Export" Style="{StaticResource HudButton}"
+                                                Height="28" Padding="10,0" FontSize="12" Margin="6,0,0,0" Click="WebTagExport_Click"
+                                                ToolTip="Tag-Katalog dieser Website als JSON speichern"/>
+                                        <Button DockPanel.Dock="Left" Content="Import" Style="{StaticResource HudButton}"
+                                                Height="28" Padding="10,0" FontSize="12" Margin="6,0,0,0" Click="WebTagImport_Click"
+                                                ToolTip="JSON-Katalog in online_site_tags dieser Website übernehmen"/>
+                                    </DockPanel>
+                                    <ProgressBar x:Name="WebTagDownloadProgress" Height="4" Margin="0,6,0,0"
+                                                 Visibility="Collapsed" Minimum="0" Maximum="1"
+                                                 Foreground="{StaticResource AccentBrush}" Background="{StaticResource LineBrush}"
+                                                 BorderThickness="0"/>
+                                    <TextBlock x:Name="WebTagDownloadStatus" Margin="2,4,0,0" FontSize="11"
+                                               Foreground="{StaticResource DimBrush}" TextWrapping="Wrap" Visibility="Collapsed"/>
+
+                                    <ItemsControl x:Name="WebCatalogGroups" Margin="0,6,0,0"
+                                                  ItemTemplate="{StaticResource WebTagCategoryTemplate}"
+                                                  AutomationProperties.Name="Online-Tag-Katalog nach Kategorie"/>
+                                    <TextBlock x:Name="WebPopularHint" Foreground="{StaticResource ChipCountBrush}" FontSize="11"
+                                               Margin="2,4,0,0" TextWrapping="Wrap"
+                                               Text="Tags dieser Website nach Kategorie. Artist, Parody, Character, Tag/Genre und Language sind geöffnet; der Rest ist eingeklappt."/>
+                                </StackPanel>
+                            </Expander>
+                            </StackPanel>
+                        </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1" MinHeight="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*" MinHeight="0"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock x:Name="WebSearchCountText" Margin="4,0,4,2" FontSize="12"
+                                   Foreground="{StaticResource ChipTextBrush}" Visibility="Collapsed"
+                                   Text="0 Ergebnisse"/>
+
+                        <Grid x:Name="SearchResultsHost" Grid.Row="1" MinHeight="0" Background="{StaticResource BgBrush}">
+                        <ListBox x:Name="SearchResultsControl" Style="{StaticResource TileGridStyle}"
+                                 ItemContainerStyle="{StaticResource WebTileItemStyle}"
+                                 ItemTemplate="{StaticResource WebSearchTileTemplate}"
+                                 AutomationProperties.Name="Online-Suchergebnisse"
+                                 Visibility="Collapsed"
+                                 Panel.ZIndex="1"
+                                 Background="{StaticResource BgBrush}"
+                                 ScrollViewer.ScrollChanged="WebSearchGrid_ScrollChanged"
+                                 KeyDown="WebSearchGrid_KeyDown"/>
+
+                        <StackPanel x:Name="WebDiscoveryPanel" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    Margin="0,0,0,40" Panel.ZIndex="0">
+                            <Border Width="84" Height="84" CornerRadius="42" Background="{StaticResource AccentFaintBrush}"
+                                    BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE774;" FontFamily="{StaticResource IconFont}" FontSize="34"
+                                           Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock x:Name="WebDiscoveryPanelTitle" FontSize="18" FontWeight="SemiBold" Margin="0,20,0,0"
+                                       HorizontalAlignment="Center" Text="Web Discovery"/>
+                            <TextBlock x:Name="WebDiscoveryPanelHint" Foreground="{StaticResource MutedBrush}" Margin="0,6,0,0"
+                                       HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="440"
+                                       Text="Eine Website wählen, Tags als Chips AND-verknüpfen und „Online suchen“. Autocomplete kommt nur aus online_site_tags dieser Quelle. Ein Klick öffnet den Online-Reader."/>
+                        </StackPanel>
+
+                        <Border x:Name="WebSearchLoading" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Visibility="Collapsed" Background="#E005070B" CornerRadius="16" Padding="28,22"
+                                BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock x:Name="WebSearchLoadingText" HorizontalAlignment="Center" FontWeight="SemiBold"
+                                           Text="Suche …"/>
+                                <Control Template="{StaticResource ScanBarTemplate}" Width="240" Height="3" Margin="0,14,0,0"/>
+                                <ProgressBar x:Name="WebSearchProgress" Height="4" Margin="0,12,0,0" IsIndeterminate="True"
+                                             Foreground="{StaticResource AccentBrush}" Background="{StaticResource LineBrush}"
+                                             BorderThickness="0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="WebSearchPager" VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                                Margin="0,0,0,6" Padding="4,2" CornerRadius="10"
+                                Background="#1AFFFFFF" BorderThickness="0" Panel.ZIndex="3" Visibility="Collapsed">
+                            <DockPanel LastChildFill="True">
+                                <Button x:Name="WebSearchPrevButton" DockPanel.Dock="Left" Content="← Zurück"
+                                        Style="{StaticResource HudButton}" Height="26" MinWidth="84" Padding="8,0" FontSize="12"
+                                        Click="WebSearchPrev_Click"/>
+                                <Button x:Name="WebSearchNextButton" DockPanel.Dock="Right" Content="Weiter →"
+                                        Style="{StaticResource HudButton}" Height="26" MinWidth="84" Padding="8,0" FontSize="12"
+                                        Margin="6,0,0,0" Click="WebSearchNext_Click"/>
+                                <Button x:Name="WebSearchMoreButton" DockPanel.Dock="Right" Content="Mehr laden"
+                                        Style="{StaticResource AccentButton}" Height="26" MinWidth="92" Padding="10,0" FontSize="12"
+                                        Margin="6,0,0,0" Click="WebSearchMore_Click"/>
+                                <TextBlock x:Name="WebSearchPageText" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                           Margin="10,0" Foreground="{StaticResource ChipTextBrush}" FontSize="12" Text="Seite 1"/>
+                            </DockPanel>
+                        </Border>
+                        </Grid>
+                    </Grid>
+                </Grid>
+
+                <!-- Downloads -->
+                <Grid x:Name="PageDownloads" Margin="28,4,28,18" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Text="NEUER DOWNLOAD" Style="{StaticResource Overline}"/>
+
+                            <TextBox x:Name="UrlBox" Grid.Row="1" Style="{StaticResource HudTextBox}" Margin="0,12,0,0"
+                                     AutomationProperties.Name="Galerie-URLs"
+                                     Height="84" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                     VerticalContentAlignment="Top" Padding="14,11"
+                                     Tag="URL(s) einfügen – eine pro Zeile, z. B. https://mangadex.org/title/…   (Strg+Enter startet)"
+                                     PreviewKeyDown="UrlBox_PreviewKeyDown"/>
+
+                            <Grid Grid.Row="2" Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TitleBox" Style="{StaticResource HudTextBox}" Margin="0,0,10,0"
+                                         AutomationProperties.Name="Titel (optional)"
+                                         Tag="Titel (optional, nur bei einer URL)"/>
+                                <TextBox x:Name="TagsBox" Grid.Column="1" Style="{StaticResource HudTextBox}" Margin="0,0,10,0"
+                                         AutomationProperties.Name="Tags (optional)"
+                                         Tag="Tags (optional, durch Komma getrennt)"/>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                    <Button Content="Einfügen" Style="{StaticResource HudButton}" Margin="0,0,8,0"
+                                            ToolTip="URL aus der Zwischenablage einfügen" Click="PasteUrl_Click"/>
+                                    <Button x:Name="ReadOnlineButton" Content="Direkt online lesen" Style="{StaticResource HudButton}" Margin="0,0,8,0"
+                                            ToolTip="Die erste Adresse sofort im Reader streamen – ohne herunterzuladen (gallery-dl -g)"
+                                            Click="ReadOnline_Click"/>
+                                    <Button x:Name="StartButton" Content="Download starten" Style="{StaticResource AccentButton}"
+                                            ToolTip="Strg+Enter" Click="StartDownload_Click"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="1" Margin="0,16,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="340"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="1.3*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Warteschlange -->
+                        <Border Style="{StaticResource Card}" Padding="0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Margin="20,14,12,8">
+                                    <TextBlock Text="WARTESCHLANGE" Style="{StaticResource Overline}" VerticalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE71A;"
+                                                ToolTip="Alle Downloads stoppen" Click="CancelAll_Click"/>
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE74D;"
+                                                ToolTip="Beendete Einträge entfernen" Click="ClearFinished_Click"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid Grid.Row="1">
+                                    <ListBox x:Name="JobList" Style="{StaticResource JobListStyle}"
+                                             AutomationProperties.Name="Warteschlange"
+                                             ItemTemplate="{StaticResource JobTemplate}"
+                                             SelectionChanged="JobList_SelectionChanged"/>
+                                    <TextBlock x:Name="JobsEmptyText" Text="Keine Downloads.&#x0A;Füge oben eine URL hinzu."
+                                               Foreground="{StaticResource DimBrush}" TextAlignment="Center"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <!-- Log -->
+                        <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Margin="20,14,16,8" Height="34">
+                                    <TextBlock x:Name="LogTitleText" Text="LOG" Style="{StaticResource Overline}"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                                <TextBox x:Name="LogBox" Grid.Row="1" IsReadOnly="True" Margin="12,0,12,12"
+                                         AutomationProperties.Name="Protokoll"
+                                         Style="{StaticResource HudTextBox}" Background="{StaticResource BgBrush}"
+                                         FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="NoWrap"
+                                         VerticalContentAlignment="Top" Padding="12,10" AcceptsReturn="True"
+                                         HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                         Tag="Das gallery-dl-Protokoll des markierten Downloads erscheint hier."/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- Einstellungen -->
+                <ScrollViewer x:Name="PageSettings" Visibility="Collapsed" Focusable="False"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="28,4,28,24" MaxWidth="860" HorizontalAlignment="Left">
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="GALLERY-DL" Style="{StaticResource Overline}"/>
+
+                                <TextBlock Text="Programmdatei" Style="{StaticResource FieldLabel}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="GalleryDlPathBox" Style="{StaticResource HudTextBox}"
+                                             AutomationProperties.Name="Pfad zu gallery-dl"
+                                             Tag="Leer = automatisch suchen (App-Ordner, PATH, python -m gallery_dl)"/>
+                                    <Button Grid.Column="1" Content="Durchsuchen …" Style="{StaticResource HudButton}"
+                                            Margin="8,0,0,0" Click="BrowseGalleryDl_Click"/>
+                                    <Button Grid.Column="2" Content="Prüfen" Style="{StaticResource HudButton}"
+                                            Margin="8,0,0,0" Click="CheckGalleryDl_Click"/>
+                                </Grid>
+                                <TextBlock x:Name="GalleryDlStatusText" Margin="2,10,0,0" FontSize="12.5" TextWrapping="Wrap"
+                                           Foreground="{StaticResource MutedBrush}"/>
+
+                                <TextBlock Text="Zusätzliche Argumente" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="ExtraArgsBox" Style="{StaticResource HudTextBox}"
+                                         AutomationProperties.Name="Zusätzliche gallery-dl-Argumente"
+                                         Tag="z. B. --cookies-from-browser firefox --sleep-request 1.0"/>
+                                <TextBlock Margin="2,8,0,0" FontSize="12" Foreground="{StaticResource DimBrush}" TextWrapping="Wrap"
+                                           Text="Werden bei jedem Download vor der URL übergeben. Zugangsdaten und Cookies lassen sich auch in der gallery-dl-Konfiguration hinterlegen."/>
+
+                                <TextBlock Text="Gleichzeitige Downloads" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox x:Name="ParallelBox" Style="{StaticResource HudComboBox}" Width="200"
+                                          AutomationProperties.Name="Parallele Downloads"
+                                          HorizontalAlignment="Left" SelectedIndex="1">
+                                    <ComboBoxItem Content="1" Tag="1"/>
+                                    <ComboBoxItem Content="2" Tag="2"/>
+                                    <ComboBoxItem Content="3" Tag="3"/>
+                                    <ComboBoxItem Content="4" Tag="4"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Text="BIBLIOTHEK" Style="{StaticResource Overline}"/>
+
+                                <TextBlock Text="Download-Ordner" Style="{StaticResource FieldLabel}"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="LibraryPathBox" Style="{StaticResource HudTextBox}"
+                                             AutomationProperties.Name="Bibliotheksordner"/>
+                                    <Button Grid.Column="1" Content="Durchsuchen …" Style="{StaticResource HudButton}"
+                                            Margin="8,0,0,0" Click="BrowseLibrary_Click"/>
+                                    <Button Grid.Column="2" Content="Öffnen" Style="{StaticResource HudButton}"
+                                            Margin="8,0,0,0" Click="OpenLibraryFolder_Click"/>
+                                </Grid>
+
+                                <Grid Margin="0,14,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Content="Ordner einlesen" Style="{StaticResource HudButton}"
+                                            ToolTip="Vorhandene Galerien im Download-Ordner aufnehmen" Click="ScanLibrary_Click"/>
+                                    <TextBlock Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center" FontSize="12"
+                                               Foreground="{StaticResource DimBrush}" TextWrapping="Wrap"
+                                               Text="Nimmt Ordner mit Bildern und CBZ/ZIP-Archive auf, die noch nicht in der Bibliothek stehen. Titel und Tags kommen aus ComicInfo.xml (im Archiv), metadata.json oder info.json. Dateien werden nur gelesen."/>
+                                </Grid>
+
+                                <TextBlock x:Name="DatabasePathText" Margin="2,14,0,0" FontSize="12"
+                                           Foreground="{StaticResource DimBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Text="WEB-ZUGRIFF / CLOUDFLARE" Style="{StaticResource Overline}"/>
+                                <TextBlock Margin="2,8,0,0" FontSize="12" Foreground="{StaticResource DimBrush}" TextWrapping="Wrap"
+                                           Text="Session-Cookies aus dem Browser (cf_clearance, csrftoken, xres, ipb_member_id) pro Domain hinterlegen. Dieselben Cookies gehen an HttpClient und an den gallery-dl-Fallback. Der User-Agent muss zum Cookie passen (aktuelles Chrome)."/>
+
+                                <TextBlock Text="Domain" Style="{StaticResource FieldLabel}"/>
+                                <ComboBox x:Name="CookieDomainBox" Style="{StaticResource HudComboBox}" Width="320"
+                                          HorizontalAlignment="Left"
+                                          AutomationProperties.Name="Cookie-Domain"
+                                          SelectionChanged="CookieDomainBox_SelectionChanged"/>
+
+                                <TextBlock Text="Cookies einfügen" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="SessionCookieBox" Style="{StaticResource HudTextBox}"
+                                         MinHeight="88" AcceptsReturn="True" TextWrapping="Wrap"
+                                         VerticalContentAlignment="Top" Padding="14,10"
+                                         AutomationProperties.Name="Session-Cookies"
+                                         Tag="cf_clearance=…; csrftoken=…   oder Netscape-Cookie-Datei"/>
+                                <TextBlock x:Name="CookieStatusText" Margin="2,8,0,0" FontSize="12" TextWrapping="Wrap"
+                                           Foreground="{StaticResource DimBrush}"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <Button Content="Cookies übernehmen" Style="{StaticResource AccentButton}"
+                                            Click="SaveCookies_Click"
+                                            ToolTip="Ersetzt die gespeicherten Cookies dieser Domain"/>
+                                    <Button Content="Domain leeren" Style="{StaticResource HudButton}" Margin="10,0,0,0"
+                                            Click="ClearCookies_Click"/>
+                                </StackPanel>
+
+                                <TextBlock Text="FlareSolverr (optional)" Style="{StaticResource FieldLabel}"/>
+                                <TextBox x:Name="FlareSolverrBox" Style="{StaticResource HudTextBox}"
+                                         AutomationProperties.Name="FlareSolverr-Adresse"
+                                         Tag="leer = aus   z. B. http://127.0.0.1:8191"/>
+                                <TextBlock Margin="2,8,0,0" FontSize="12" Foreground="{StaticResource DimBrush}" TextWrapping="Wrap"
+                                           Text="Wenn die API 403 liefert, wird zuerst FlareSolverr gefragt, danach gallery-dl. Cookies aus der Challenge landen automatisch im Speicher."/>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Content="Einstellungen speichern" Style="{StaticResource AccentButton}" Margin="0,18,0,0"
+                                HorizontalAlignment="Left" Click="SaveSettings_Click"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- HUD-Statusleiste -->
+            <Border Grid.Row="4" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource LineBrush}"
+                    BorderThickness="0,1,0,0">
+                <Grid Height="38" Margin="22,0,16,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="{StaticResource SuccessBrush}" Margin="0,0,11,0"/>
+                        <TextBlock x:Name="StatusText" Grid.Column="1" Text="Bereit" Foreground="{StaticResource MutedBrush}"
+                                   FontFamily="{StaticResource MonoFont}" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <StackPanel x:Name="DownloadHud" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                Visibility="Collapsed">
+                        <Control Template="{StaticResource ScanBarTemplate}" Width="130" Height="3" Margin="0,0,14,0"/>
+                        <TextBlock x:Name="DownloadHudText" Foreground="{StaticResource AccentBrush}"
+                                   FontFamily="{StaticResource MonoFont}" FontSize="12" VerticalAlignment="Center"/>
+                        <Button x:Name="StopAllButton" Style="{StaticResource IconButton}" Content="&#xE71A;" Width="28"
+                                Height="28" Margin="10,0,0,0" ToolTip="Alle Downloads stoppen" Click="CancelAll_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ───────────────────────── BEARBEITEN (Overlay) ───────────────────────── -->
+        <Grid x:Name="EditOverlay" Grid.ColumnSpan="2" Background="#D005070B" Visibility="Collapsed"
+              PreviewKeyDown="EditOverlay_PreviewKeyDown">
+            <Border Style="{StaticResource Card}" Width="540" Padding="26" Background="{StaticResource PanelBrush}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" BlurRadius="40" ShadowDepth="10" Opacity="0.6"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="EINTRAG BEARBEITEN" Style="{StaticResource Overline}"
+                               Foreground="{StaticResource AccentBrush}"/>
+
+                    <TextBlock Text="Titel" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="EditTitleBox" Style="{StaticResource HudTextBox}" AutomationProperties.Name="Titel"/>
+
+                    <TextBlock Text="Autor" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="EditAuthorBox" Style="{StaticResource HudTextBox}" AutomationProperties.Name="Autor" Tag="optional"/>
+
+                    <TextBlock Text="Tags" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="EditTagsBox" Style="{StaticResource HudTextBox}" AutomationProperties.Name="Tags"
+                             Tag="durch Komma getrennt, z. B. romance, school life"/>
+
+                    <TextBlock x:Name="EditFolderText" Margin="2,14,0,0" FontSize="11.5" Foreground="{StaticResource DimBrush}"
+                               FontFamily="{StaticResource MonoFont}" TextTrimming="CharacterEllipsis"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,22,0,0">
+                        <Button Content="Abbrechen" Style="{StaticResource HudButton}" Click="EditCancel_Click"/>
+                        <Button Content="Speichern" Style="{StaticResource AccentButton}" Margin="10,0,0,0"
+                                Click="EditSave_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Dünner Fensterrahmen (die Systemleiste mit ihrem Rand entfällt durch WindowChrome) -->
+        <Border Grid.ColumnSpan="2" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" IsHitTestVisible="False"/>
+    </Grid>
+</Window>
