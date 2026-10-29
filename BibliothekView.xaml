@@ -1,0 +1,330 @@
+<UserControl x:Class="MangaLibraryApp.BibliothekView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:MangaLibraryApp"
+             xmlns:lex="clr-namespace:MangaLibraryApp">
+    <UserControl.Resources>
+        <Style x:Key="StatusChip" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Chip" Padding="12,6" CornerRadius="8"
+                                Background="{StaticResource ChipBrush}"
+                                BorderBrush="{StaticResource ChipBorderBrush}" BorderThickness="1">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="FilterChip" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="0,0,8,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chip" Padding="12,6" CornerRadius="8"
+                                Background="{StaticResource ChipBrush}"
+                                BorderBrush="{StaticResource ChipBorderBrush}" BorderThickness="1">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CompactStatus" TargetType="RadioButton" BasedOn="{StaticResource StatusChip}">
+            <Setter Property="Margin" Value="0,0,4,4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Chip" Padding="8,3" CornerRadius="7"
+                                Background="{StaticResource ChipBrush}"
+                                BorderBrush="{StaticResource ChipBorderBrush}" BorderThickness="1">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CompactFilter" TargetType="Button" BasedOn="{StaticResource FilterChip}">
+            <Setter Property="Margin" Value="0,0,4,4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chip" Padding="8,3" CornerRadius="7"
+                                Background="{StaticResource ChipBrush}"
+                                BorderBrush="{StaticResource ChipBorderBrush}" BorderThickness="1">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="CategoryChipTemplate">
+            <Button Content="{Binding Label}" Style="{StaticResource FilterChip}" Click="CategoryChip_Click">
+                <Button.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                                Opened="CategoryMenu_Opened">
+                        <MenuItem Header="Umbenennen" Click="RenameCategory_Click"/>
+                        <MenuItem Header="Löschen" Click="DeleteCategory_Click"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+        </DataTemplate>
+        <DataTemplate x:Key="CompactCategoryChipTemplate">
+            <Button Content="{Binding Label}" Style="{StaticResource CompactFilter}" Click="CategoryChip_Click"
+                    ToolTip="Klick filtert · Rechtsklick benennt um oder löscht">
+                <Button.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                                Opened="CategoryMenu_Opened">
+                        <MenuItem Header="Umbenennen" Click="RenameCategory_Click"/>
+                        <MenuItem Header="Löschen" Click="DeleteCategory_Click"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <WrapPanel x:Name="LibraryBar" Margin="12,0,12,2">
+            <RadioButton x:Name="FavStatusAll" Content="Alle" GroupName="LibraryReading" Tag="All" IsChecked="True"
+                         Style="{StaticResource CompactStatus}" Checked="StatusFilter_Checked"/>
+            <RadioButton x:Name="FavStatusUnread" Content="Ungelesen" GroupName="LibraryReading" Tag="Unread"
+                         Style="{StaticResource CompactStatus}" Checked="StatusFilter_Checked"/>
+            <RadioButton x:Name="FavStatusReading" Content="Am Lesen" GroupName="LibraryReading" Tag="Reading"
+                         Style="{StaticResource CompactStatus}" Checked="StatusFilter_Checked"/>
+            <RadioButton x:Name="FavStatusCompleted" Content="Abgeschlossen" GroupName="LibraryReading" Tag="Completed"
+                         Style="{StaticResource CompactStatus}" Checked="StatusFilter_Checked"/>
+            <Button Content="{Binding SelectionModeLabel}" Click="SelectionMode_Click"
+                    Style="{StaticResource HudButton}" Height="28" MinHeight="28" Margin="4,0,4,4" Padding="10,0" FontSize="12"/>
+            <StackPanel Orientation="Horizontal" Visibility="{Binding SelectionMode, Converter={StaticResource BoolToVis}}">
+                <Button Content="Alle" Click="SelectAll_Click" ToolTip="Alle sichtbaren Titel auswählen"
+                        Style="{StaticResource HudButton}" Height="28" MinHeight="28" Margin="0,0,4,4" Padding="10,0" FontSize="12"/>
+                <Button Content="Aufheben" Click="ClearSelection_Click"
+                        Style="{StaticResource HudButton}" Height="28" MinHeight="28" Margin="0,0,4,4" Padding="10,0" FontSize="12"/>
+                <Button Command="{Binding DeleteCommand}" Style="{StaticResource HudButton}"
+                        Height="28" MinHeight="28" Margin="0,0,4,4" Padding="10,0" FontSize="12" ToolTip="Ausgewählte löschen">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Ausgewählte löschen" FontSize="12"/>
+                        <TextBlock Text="{Binding SelectedCount, StringFormat=' ({0})'}" FontSize="12"/>
+                    </StackPanel>
+                </Button>
+                <Button Content="Kategorie" Click="AssignSelected_Click" ToolTip="Ausgewählte einer Kategorie zuweisen"
+                        Style="{StaticResource HudButton}" Height="28" MinHeight="28" Margin="0,0,4,4" Padding="10,0" FontSize="12"/>
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding Categories}" ItemTemplate="{StaticResource CompactCategoryChipTemplate}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <Button Content="+" Click="AddCategory_Click" ToolTip="Neue Kategorie"
+                    Style="{StaticResource HudButton}" Width="28" Height="28" MinHeight="28" Margin="0,0,8,4" Padding="0" FontSize="16"/>
+            <TextBlock Text="Seiten" VerticalAlignment="Center" Margin="4,0,6,4"
+                       Foreground="{StaticResource MutedBrush}" FontSize="12"/>
+            <TextBox x:Name="PageMinBox" Style="{StaticResource HudTextBox}" Width="52" Height="28" MinHeight="28"
+                     Padding="8,0" FontSize="12" Margin="0,0,4,4" Tag="von" ToolTip="Mindestens so viele Seiten"
+                     TextChanged="PageRange_TextChanged"/>
+            <TextBlock Text="–" VerticalAlignment="Center" Margin="0,0,4,4" Foreground="{StaticResource MutedBrush}"/>
+            <TextBox x:Name="PageMaxBox" Style="{StaticResource HudTextBox}" Width="52" Height="28" MinHeight="28"
+                     Padding="8,0" FontSize="12" Margin="0,0,0,4" Tag="bis" ToolTip="Höchstens so viele Seiten"
+                     TextChanged="PageRange_TextChanged"/>
+        </WrapPanel>
+
+        <Grid Grid.Row="1">
+            <ListBox x:Name="CoverGrid" ItemsSource="{Binding Items}"
+                     Background="Transparent" BorderThickness="0" Padding="8,0,4,8"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.CanContentScroll="True"
+                     VirtualizingStackPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling"
+                     VirtualizingPanel.ScrollUnit="Pixel">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <local:VirtualizingWrapPanel ItemWidth="196" ItemHeight="312"/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <EventSetter Event="PreviewMouseLeftButtonUp" Handler="Card_Click"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <ContentPresenter/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="180" Height="296" Margin="6" CornerRadius="12"
+                                Background="{StaticResource CardBrush}">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+                                    <Setter Property="BorderThickness" Value="1"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                            <Setter Property="BorderThickness" Value="2"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Border.ContextMenu>
+                                <ContextMenu Opened="CardMenu_Opened">
+                                    <MenuItem Header="Ungelesen" Tag="Unread" Click="ReadingStatus_Click"/>
+                                    <MenuItem Header="Am Lesen" Tag="Reading" Click="ReadingStatus_Click"/>
+                                    <MenuItem Header="Abgeschlossen" Tag="Completed" Click="ReadingStatus_Click"/>
+                                    <Separator/>
+                                    <MenuItem Header="Kategorie" Tag="assign" ToolTip="Bestehende oder neue Kategorie zuweisen"/>
+                                    <MenuItem Header="Löschen" Click="DeleteOne_Click"/>
+                                </ContextMenu>
+                            </Border.ContextMenu>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Border CornerRadius="12,12,0,0" ClipToBounds="True" Background="{StaticResource PanelBrush}">
+                                    <Grid>
+                                        <Image Source="{Binding Cover, Mode=OneWay}" Stretch="UniformToFill"/>
+                                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6" Padding="6,2"
+                                                CornerRadius="6" Background="#CC10141C">
+                                            <TextBlock Text="{Binding SourceBadge}" Foreground="White" FontSize="10" FontWeight="SemiBold"/>
+                                        </Border>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6">
+                                            <Button Width="28" Height="28" Margin="0,0,4,0" Click="Selection_Click"
+                                                    ToolTip="Auswählen"
+                                                    Visibility="{Binding ShowSelection, Converter={StaticResource BoolToVis}}">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                                        <Setter Property="Width" Value="28"/>
+                                                        <Setter Property="Height" Value="28"/>
+                                                        <Setter Property="Content" Value="&#xE739;"/>
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="Background" Value="#CC10141C"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                <Setter Property="Content" Value="&#xE73A;"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Button Width="28" Height="28" Click="Favorite_Click" Content="&#xE734;">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                                    <Setter Property="Foreground" Value="{StaticResource MutedBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                                <StackPanel Grid.Row="1" Margin="8,6,8,8">
+                                    <DockPanel LastChildFill="True">
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding PageCountText}" FontSize="11"
+                                                   Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"
+                                                   Margin="6,0,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding PageCountText}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="White"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </DockPanel>
+                                    <TextBlock Text="{Binding ArtistLine}" Foreground="{StaticResource MutedBrush}" FontSize="11"
+                                               TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                    <TextBlock Text="{Binding StatusText}" Foreground="{StaticResource MutedBrush}" FontSize="11"
+                                               Margin="0,2,0,0" TextTrimming="CharacterEllipsis">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusText}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding CategoryLine}" Foreground="{StaticResource AccentBrush}" FontSize="11"
+                                               Margin="0,2,0,0" TextTrimming="CharacterEllipsis"
+                                               Visibility="{Binding HasCategories, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <TextBlock Text="{lex:Loc Library_Empty}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="{StaticResource MutedBrush}" IsHitTestVisible="False">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasItems}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+    </Grid>
+</UserControl>

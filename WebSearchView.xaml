@@ -1,0 +1,45 @@
+<UserControl x:Class="MangaLibraryApp.WebSearchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="64" d:DesignWidth="900">
+    <StackPanel>
+        <DockPanel LastChildFill="True">
+            <ComboBox DockPanel.Dock="Right"
+                      Width="220"
+                      Margin="8,0,0,0"
+                      VerticalAlignment="Center"
+                      Style="{DynamicResource HudComboBox}"
+                      ItemsSource="{Binding RoadmapSources}"
+                      SelectedItem="{Binding SelectedRoadmap, Mode=TwoWay}"
+                      DisplayMemberPath="Title"
+                      AutomationProperties.Name="Weitere Quellen"
+                      SelectionChanged="Roadmap_SelectionChanged"/>
+            <ItemsControl ItemsSource="{Binding ActiveSources}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <RadioButton GroupName="WebSite"
+                                     Content="{Binding Title}"
+                                     Style="{DynamicResource CompactSiteRadio}"
+                                     IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                     Checked="ActiveSource_Checked"
+                                     AutomationProperties.Name="{Binding Title}"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+        <TextBlock Margin="0,6,0,0"
+                   FontSize="12"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource WarnBrush}"
+                   Text="{Binding RoadmapBanner}"
+                   Visibility="{Binding RoadmapBannerVisibility}"/>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav_Library" xml:space="preserve"><value>Library</value></data>
+  <data name="Nav_Favorites" xml:space="preserve"><value>Favorites</value></data>
+  <data name="Nav_Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="Nav_WebSearch" xml:space="preserve"><value>Web Search</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Web_Search" xml:space="preserve"><value>Search online</value></data>
+  <data name="Web_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Web_Target" xml:space="preserve"><value>TARGET SITE</value></data>
+  <data name="Web_Cloudflare" xml:space="preserve"><value>Cloudflare is blocking the request (HTTP 403 / gallery-dl code 2). The session is read from the selected browser. If that fails, close the browser briefly.</value></data>
+  <data name="Web_CookieLocked" xml:space="preserve"><value>Access to the browser cookies is blocked. Please close your browser briefly so NekoDex can read the session cookies.</value></data>
+  <data name="Web_Roadmap" xml:space="preserve"><value>{0} is on the roadmap, but not implemented yet.</value></data>
+  <data name="Download_New" xml:space="preserve"><value>NEW DOWNLOAD</value></data>
+  <data name="Download_Paste" xml:space="preserve"><value>Paste</value></data>
+  <data name="Download_ReadOnline" xml:space="preserve"><value>Read online</value></data>
+  <data name="Download_ReadOnlineTip" xml:space="preserve"><value>Stream the first address in the reader without saving the gallery (gallery-dl -g).</value></data>
+  <data name="Download_Start" xml:space="preserve"><value>Start download</value></data>
+  <data name="Download_Queue" xml:space="preserve"><value>QUEUE</value></data>
+  <data name="Download_Empty" xml:space="preserve"><value>No downloads. Add a URL above.</value></data>
+  <data name="Download_Log" xml:space="preserve"><value>LOG</value></data>
+  <data name="Download_Queued" xml:space="preserve"><value>Queued</value></data>
+  <data name="Download_Connecting" xml:space="preserve"><value>Connecting and reading metadata…</value></data>
+  <data name="Download_Loaded" xml:space="preserve"><value>{0} downloaded</value></data>
+  <data name="Download_Skipped" xml:space="preserve"><value>{0} skipped</value></data>
+  <data name="Download_Progress" xml:space="preserve"><value>{0}/{1}{2}</value></data>
+  <data name="Download_FailedBadge" xml:space="preserve"><value>Error</value></data>
+  <data name="Download_Retry" xml:space="preserve"><value>Retry</value></data>
+  <data name="Download_CancelJob" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Download_Remove" xml:space="preserve"><value>Remove from the list</value></data>
+  <data name="Download_Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="Download_CancelPending" xml:space="preserve"><value>Cancelling…</value></data>
+  <data name="Download_Failed" xml:space="preserve"><value>Download failed: {0}</value></data>
+  <data name="Download_NoFiles" xml:space="preserve"><value>gallery-dl returned no files. Is this URL supported?</value></data>
+  <data name="Download_ExitCode" xml:space="preserve"><value>gallery-dl exited with code {0}.</value></data>
+  <data name="Download_Enqueued" xml:space="preserve"><value>Download queued.</value></data>
+  <data name="Download_EnqueuedMany" xml:space="preserve"><value>{0} downloads queued.</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings_LanguageHint" xml:space="preserve"><value>Applies immediately and is restored the next time NekoDex starts.</value></data>
+  <data name="Reader_Streaming" xml:space="preserve"><value>Streaming — the next pages are prefetched</value></data>
+  <data name="Reader_PageFailed" xml:space="preserve"><value>Page {0} could not be loaded:
+{1}</value></data>
+  <data name="Library_Search" xml:space="preserve"><value>Title or artist</value></data>
+  <data name="Library_SortRead" xml:space="preserve"><value>Last read</value></data>
+  <data name="Library_SortAdded" xml:space="preserve"><value>Date added</value></data>
+  <data name="Library_SortTitle" xml:space="preserve"><value>Title (A–Z)</value></data>
+  <data name="Library_Empty" xml:space="preserve"><value>No titles in the library.</value></data>
+</root>
